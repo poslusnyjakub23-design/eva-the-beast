@@ -49,7 +49,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15p
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
 button:focus-visible,input:focus-visible{outline:2px solid var(--goal);outline-offset:2px;border-radius:8px}
 /* Pevně přes celou obrazovku: iPhone v režimu aplikace jinak špatně počítá výšku */
-.app{position:fixed;top:0;bottom:0;left:0;right:0;display:flex;flex-direction:column;max-width:560px;margin:0 auto;background:var(--bg)}
+.app{position:fixed;top:0;bottom:0;left:0;right:0;height:var(--app-h,auto);display:flex;flex-direction:column;max-width:560px;margin:0 auto;background:var(--bg)}
 
 /* Header */
 header{padding:calc(14px + env(safe-area-inset-top,0px)) 16px 12px;display:grid;grid-template-columns:minmax(0,1fr);gap:12px;border-bottom:1px solid var(--line);background:var(--bg)}
@@ -1142,6 +1142,16 @@ $('#sheet').addEventListener('click',ev=>{
   }
 });
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&!$('#sheet').hidden)closeInfo();});
+
+// iPhone: aplikace spuštěná z plochy občas hlásí výšku okna o stavový řádek menší,
+// takže pod spodní lištou zůstane pruh. Změříme skutečnou výšku displeje.
+(function fixStandaloneHeight(){
+  if(!navigator.standalone) return;
+  const root=document.documentElement;
+  const set=()=>{const portrait=innerWidth<innerHeight, sh=portrait?Math.max(screen.width,screen.height):Math.min(screen.width,screen.height);
+    if(innerHeight<sh-1) root.style.setProperty('--app-h',sh+'px'); else root.style.removeProperty('--app-h');};
+  set(); addEventListener('resize',set); addEventListener('orientationchange',()=>setTimeout(set,300));
+})();
 
 renderGoals(); render();
 </script>
