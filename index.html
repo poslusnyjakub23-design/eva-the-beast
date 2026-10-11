@@ -415,23 +415,38 @@ nav.tabs{grid-template-columns:repeat(4,1fr)}
 .fig{display:block;width:100%;height:auto}
 .fig line{stroke-linecap:round}
 .fig .g-n{stroke:var(--ink)}
-.fig .g-f{stroke:var(--muted);opacity:.75}
-.fig .g-hd{fill:var(--ink)}
-.fig .g-eq{stroke:var(--line)}
+.fig .g-f{stroke:var(--muted);opacity:.7}
+.fig .g-hd,.fig .g-hand{fill:var(--ink)}
+.fig .g-handf{fill:var(--muted);opacity:.7}
+.fig .g-tor{fill:var(--ink);stroke:var(--ink);stroke-width:1.5;stroke-linejoin:round}
+.fig .g-hl{stroke:var(--goal)}
+.fig .g-hlf{stroke:var(--goal);opacity:.5}
+.fig .g-hlp,.fig .g-hlc{fill:var(--goal)}
+.fig .g-eq{stroke:color-mix(in srgb,var(--muted) 45%,var(--sunk))}
 .fig .g-eqb{stroke:var(--muted)}
-.fig .g-eqf{fill:var(--muted)}
-.fig .g-pl{fill:var(--goal);stroke:var(--goal)}
-.fig .g-hub{fill:var(--surface)}
+.fig .g-pad{stroke:color-mix(in srgb,var(--muted) 80%,var(--sunk))}
+.fig .g-box{fill:var(--surface);stroke:color-mix(in srgb,var(--muted) 80%,var(--sunk));stroke-width:2}
+.fig .g-roll{fill:color-mix(in srgb,var(--muted) 80%,var(--sunk))}
+.fig .g-plo{fill:var(--surface);stroke:var(--ink);stroke-width:2}
+.fig .g-pli{fill:none;stroke:var(--ink);stroke-width:1.2}
+.fig .g-hub{fill:var(--ink)}
+.fig .g-plf{stroke:var(--ink)}
 .fig .g-cab{stroke:var(--muted)}
 .fig .g-band{stroke:var(--red)}
 .fig .g-gnd{stroke:var(--line)}
 .figbox{background:var(--sunk);border-radius:12px;padding:12px}
-.figbox .fig{height:170px}
+.figbox .fig{height:196px}
 .ex{grid-template-columns:76px minmax(0,1fr) auto}
 .exthumb{width:76px;height:64px;background:var(--sunk);border-radius:10px;padding:5px;align-self:start}
 .exthumb .fig{height:100%}
 .exinfo>.tags{display:flex}
 .now .figbox .fig{height:140px}
+.figpair{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:-8px}
+.figpair figure{margin:0;background:var(--sunk);border-radius:10px;padding:8px 8px 6px;display:grid;gap:4px}
+.figpair .fig{height:96px}
+.figpair figcaption{font-size:11.5px;font-weight:600;color:var(--muted);text-align:center;text-transform:uppercase;letter-spacing:.05em}
+.figleg{margin:-8px 0 0;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.figleg i{width:12px;height:12px;border-radius:3px;background:var(--goal)}
 .boot{margin:40px 0;text-align:center;color:var(--muted);font-size:15px}
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font-size:13px;font-weight:600;z-index:30;white-space:nowrap;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
@@ -744,84 +759,122 @@ function eqGroup(e){const q=e.eq;
 const WPART = {id:'zeny',name:'Pro ženy',lat:'hýždě, nohy, core a šetrnější varianty',ex:Object.values(EX).filter(e=>e.w)};
 Object.values(EX).forEach(e=>{e._s=norm([e.n,e.m,e.partName,e.eq].join(' '));e.g=eqGroup(e);});
 
-// ---------- obrázky cviků: jednoduchá postava v SVG ----------
+// ---------- obrázky cviků: postava v SVG ----------
 // Boční pohled (m:'s', postava hledí doprava) nebo čelní pohled (m:'f').
-// Póza: h = boky, t = úhel trupu (stupně, 0 = doprava, -90 = nahoru), a/a2 = ruce, f/f2 = chodidla,
-// eb/kb = na kterou stranu se ohne loket/koleno. Lokty a kolena se dopočítají.
-const FG={torso:34,neck:10,head:7,ua:17,fa:16,th:22,sh:22,sw:10,hw:6,G:126};
+// Póza: h = boky, t = úhel trupu (0 = doprava, -90 = nahoru), a/a2 = ruce, f/f2 = kotníky,
+// eb/kb = strana ohnutí lokte/kolena, fa/fa2 = úhel chodidla. Lokty a kolena se dopočítají.
+const FG={torso:34,shDrop:4,neck:11,head:7.5,ua:17,fa:16,th:22,sh:22,foot:8,sw:10,hw:6.5,G:126};
 const rad=d=>d*Math.PI/180;
 const P=(p,l,a)=>[p[0]+l*Math.cos(rad(a)),p[1]+l*Math.sin(rad(a))];
 const ang=(p,q)=>Math.atan2(q[1]-p[1],q[0]-p[0])*180/Math.PI;
+const mid=(p,q,t=.5)=>[p[0]+(q[0]-p[0])*t,p[1]+(q[1]-p[1])*t];
 function ik(root,tgt,a,b,bend){
   const dx=tgt[0]-root[0],dy=tgt[1]-root[1];let d=Math.hypot(dx,dy);
   const base=Math.atan2(dy,dx);d=Math.max(Math.abs(a-b)+0.5,Math.min(a+b-0.01,d));
   const al=Math.acos(Math.max(-1,Math.min(1,(a*a+d*d-b*b)/(2*a*d))));
   const j=[root[0]+a*Math.cos(base+bend*al),root[1]+a*Math.sin(base+bend*al)];
-  const e=P(j,b,ang(j,tgt));return [j,e];
+  return [j,P(j,b,ang(j,tgt))];
 }
 const lerp=(x,y,t)=>x+(y-x)*t;
-const lerpP=(p,q,t)=>[lerp(p[0],q[0],t),lerp(p[1],q[1],t)];
 function blend(A,B,t){const o={};for(const k in A){const v=A[k],w=B[k];
-  if(Array.isArray(v)&&Array.isArray(w))o[k]=lerpP(v,w,t);
+  if(Array.isArray(v)&&Array.isArray(w))o[k]=[lerp(v[0],w[0],t),lerp(v[1],w[1],t)];
   else if(typeof v==='number'&&typeof w==='number')o[k]=lerp(v,w,t);
   else o[k]=t<0.5?v:(w===undefined?v:w);}
   for(const k in B)if(!(k in A))o[k]=B[k];return o;}
+// úhel chodidla: na zemi naplocho dopředu, jinak kolmo na holeň
+const footAng=(k,f,given,dir=1)=>given!=null?given:(f[1]>=FG.G-7?(dir>0?0:180):ang(k,f)-90*dir);
 function solveSide(p){
-  const h=p.h,t=p.t,neck=P(h,FG.torso,t),sh=p.su?P(neck,p.su,t):neck,head=P(neck,FG.neck,t);
+  const h=p.h,t=p.t,top=P(h,FG.torso,t),sh0=P(h,FG.torso-FG.shDrop,t),sh=p.su?P(sh0,p.su,t):sh0,head=P(top,FG.neck-3+(p.su||0),t);
   const [e,a]=ik(sh,p.a,FG.ua,FG.fa,p.eb??1),[e2,a2]=ik(sh,p.a2||p.a,FG.ua,FG.fa,p.eb2??p.eb??1);
   const [k,f]=ik(h,p.f,FG.th,FG.sh,p.kb??-1),[k2,f2]=ik(h,p.f2||p.f,FG.th,FG.sh,p.kb2??p.kb??-1);
-  return {hip:h,neck,sh,head,e,a,e2,a2,k,f,k2,f2,mode:'s'};
+  const toe=P(f,FG.foot,footAng(k,f,p.fa)),toe2=P(f2,FG.foot,footAng(k2,f2,p.fa2??p.fa));
+  return {hip:h,top,sh,head,e,a,e2,a2,k,f,k2,f2,toe,toe2,t};
 }
 function solveFront(p){
-  const c=p.c,t=p.t??-90,tl=p.tl??FG.torso,neck=P(c,tl,t),head=P(neck,FG.neck,t);
-  const shL=P(neck,FG.sw,t-90),shR=P(neck,FG.sw,t+90),hL=P(c,FG.hw,t-90),hR=P(c,FG.hw,t+90);
+  const c=p.c,t=p.t??-90,tl=p.tl??FG.torso,top=P(c,tl,t),head=P(top,FG.neck-3,t),shc=P(c,tl-FG.shDrop,t);
+  const shL=P(shc,FG.sw,t-90),shR=P(shc,FG.sw,t+90),hL=P(c,FG.hw,t-90),hR=P(c,FG.hw,t+90);
   const [eL,aL]=ik(shL,p.aL,FG.ua,FG.fa,p.ebL??1),[eR,aR]=ik(shR,p.aR,FG.ua,FG.fa,p.ebR??-1);
-  const [kL,fL]=ik(hL,p.fL,FG.th,FG.sh,p.kbL??1),[kR,fR]=ik(hR,p.fR,FG.th,FG.sh,p.kbR??-1);
-  return {c,neck,head,shL,shR,hL,hR,eL,aL,eR,aR,kL,fL,kR,fR,mode:'f'};
+  const sl=p.shl??FG.sh,tl2=p.thl??FG.th;
+  const [kL,fL]=ik(hL,p.fL,tl2,sl,p.kbL??1),[kR,fR]=ik(hR,p.fR,tl2,sl,p.kbR??-1);
+  const toeL=P(fL,6,p.faL??(fL[1]>=FG.G-7?200:ang(kL,fL))),toeR=P(fR,6,p.faR??(fR[1]>=FG.G-7?-20:ang(kR,fR)));
+  return {c,top,head,shc,shL,shR,hL,hR,eL,aL,eR,aR,kL,fL,kR,fR,toeL,toeR,t};
 }
-// Primitiva: [typ, třída, ...souřadnice]
-function prims(def,p){
-  const j=def.m==='f'?solveFront(p):solveSide(p),out=[],L=(c,a,b,w)=>out.push(['l',c,a[0],a[1],b[0],b[1],w]),C=(c,a,r)=>out.push(['c',c,a[0],a[1],r]);
-  const J=n=>Array.isArray(n)?n:j[n];
-  const props=def.p||[];
-  // statické vybavení vzadu
+// Zvýraznění zapojených svalů podle partie
+const HL_PART={hrudnik:['chest'],zada:['back'],ramena:['delt'],biceps:['ua'],triceps:['ua'],nohy:['th'],hyzde:['glute','th'],bricho:['abs']};
+const HL_EX={calf:['calf'],seatcalf:['calf'],dl:['back','glute','th'],rdl:['glute','th'],sldl:['glute','th'],hyper:['back','glute'],shrug:['back'],
+  cgbp:['ua','chest'],dips:['chest','ua'],benchdip:['ua'],diamond:['ua','chest'],pike:['delt','ua'],uprow:['delt'],landmine:['delt','chest'],
+  legcurl:['th'],nordic:['th'],plank:['abs'],sideplank:['abs'],mountain:['abs'],birddog:['abs','glute'],kbswing:['glute','th'],pullthru:['glute'],
+  revcurl:['ua','fa'],hammer:['ua','fa'],zottman:['ua','fa'],abd:['glute'],hydrant:['glute'],clam:['glute'],bandwalk:['glute']};
+function prims(def,p,hl){
+  const fr=def.m==='f', j=fr?solveFront(p):solveSide(p), out=[];
+  const L=(c,a,b,w)=>out.push(['l',c,a[0],a[1],b[0],b[1],w]), C=(c,a,r)=>out.push(['c',c,a[0],a[1],r]), Q=(c,pts)=>out.push(['p',c,pts]);
+  const J=n=>Array.isArray(n)?n:j[n], props=def.p||[], H=new Set(hl||[]);
+  const legs=(x,y,len=FG.G)=>{L('g-eq',[x,y],[x,len],3);L('g-eq',[x-4,len],[x+4,len],3);};
+  // stojany, lavice, sedadla (vzadu)
   props.forEach(q=>{
-    if(q.k==='bench'){L('eqb',[q.x1,q.y1],[q.x2,q.y2],6);(q.legs??true)&&[q.x1+6,q.x2-6].forEach(x=>{const y=lerp(q.y1,q.y2,(x-q.x1)/(q.x2-q.x1));L('eq',[x,y+3],[x,FG.G],3);});}
-    if(q.k==='box'){L('eqb',[q.x,q.y+4],[q.x+q.w,q.y+4],8);L('eq',[q.x+3,q.y+8],[q.x+3,FG.G],3);L('eq',[q.x+q.w-3,q.y+8],[q.x+q.w-3,FG.G],3);}
-    if(q.k==='pbar'){L('eq',[q.x1,q.y],[q.x2,q.y],3);L('eq',[q.x1,q.y],[q.x1,FG.G],2.5);L('eq',[q.x2,q.y],[q.x2,FG.G],2.5);}
-    if(q.k==='line')L(q.c||'eq',[q.x1,q.y1],[q.x2,q.y2],q.w||3);
-    if(q.k==='wall')L('eq',[q.x,10],[q.x,FG.G],4);
+    if(q.k==='bench'){L('g-pad',[q.x1,q.y1],[q.x2,q.y2],7);if(q.legs??true)[q.x1+7,q.x2-7].forEach(x=>{const y=lerp(q.y1,q.y2,(x-q.x1)/(q.x2-q.x1));legs(x,y+4);});}
+    if(q.k==='box'){out.push(['r','g-box',q.x,q.y,q.w,FG.G-q.y]);}
+    if(q.k==='pbar'){L('g-eq',[q.x1,q.y],[q.x1,FG.G],3);L('g-eq',[q.x2,q.y],[q.x2,FG.G],3);L('g-eqb',[q.x1-3,q.y],[q.x2+3,q.y],3.5);}
+    if(q.k==='rack'){L('g-eq',[q.x,q.y-10],[q.x,FG.G],3.5);L('g-eqb',[q.x,q.y],[q.x+6,q.y],3);L('g-eqb',[q.x+6,q.y],[q.x+6,q.y-4],3);}
+    if(q.k==='line')L(q.c||'g-eq',[q.x1,q.y1],[q.x2,q.y2],q.w||3);
+    if(q.k==='pad')L('g-pad',[q.x1,q.y1],[q.x2,q.y2],q.w||7);
+    if(q.k==='wall')L('g-eq',[q.x,8],[q.x,FG.G],4);
+    if(q.k==='backpad'&&!fr)L('g-pad',P(P(j.hip,4,j.t),6,j.t-90),P(P(j.hip,32,j.t),6,j.t-90),6);
+    if(q.k==='tower'){L('g-eq',[q.x,q.y1],[q.x,FG.G],4);L('g-eq',[q.x-6,FG.G],[q.x+6,FG.G],3);}
+    if(q.back&&q.k==='bar')plate(q,J(q.at));
   });
-  // kabely a gumy (od kloubu ke kotvě)
+  // kabely a gumy
   props.forEach(q=>{
-    if(q.k==='cable'){L('cab',J(q.at),q.to,1.6);C('eqf',q.to,3);}
-    if(q.k==='band')L('band',J(q.at),J(q.to),2.4);
-    if(q.k==='rod')L('eqb',J(q.at),q.to,4);
+    if(q.k==='cable'){L('g-cab',J(q.at),q.to,1.6);if(q.tower!==false&&q.to[1]<FG.G-12){const tx=q.to[0]+(q.to[0]>J(q.at)[0]?4:-4);L('g-eq',[tx,q.to[1]-4],[tx,FG.G],3.5);L('g-eq',[tx-5,FG.G],[tx+5,FG.G],3);}C('g-plo',q.to,3.4);}
+    if(q.k==='band')L('g-band',J(q.at),J(q.to),2.6);
+    if(q.k==='rod')L('g-eqb',J(q.at),q.to,4);
   });
-  const far=def.m==='f'?'n':'f';
-  if(def.m==='f'){
-    L('n',j.hL,j.kL,5);L('n',j.kL,j.fL,5);L('n',j.hR,j.kR,5);L('n',j.kR,j.fR,5);
-    L('n',j.hL,j.hR,6);L('n',j.shL,j.shR,6);L('n',j.c,j.neck,6);
-    L('n',j.shL,j.eL,5);L('n',j.eL,j.aL,5);L('n',j.shR,j.eR,5);L('n',j.eR,j.aR,5);C('hd',j.head,FG.head);
+  function plate(q,at){const r=q.r||9;C('g-plo',at,r);C('g-pli',at,r*.58);C('g-hub',at,1.9);}
+  const limb=(cls,a,b,w,key)=>{L(cls,a,b,w);if(H.has(key))L(cls==='g-f'?'g-hlf':'g-hl',a,b,w-0.6);};
+  if(fr){
+    const torso=[j.hL,j.hR,P(j.shR,1.5,j.t+90),P(j.shL,1.5,j.t-90)];
+    limb('g-n',j.hL,j.kL,5.2,'th');limb('g-n',j.kL,j.fL,5,'calf');limb('g-n',j.hR,j.kR,5.2,'th');limb('g-n',j.kR,j.fR,5,'calf');
+    L('g-n',j.fL,j.toeL,4);L('g-n',j.fR,j.toeR,4);
+    Q('g-tor',torso);
+    const mL=mid(j.hL,j.shL),mR=mid(j.hR,j.shR),ins=(p,q)=>mid(p,q,.18);
+    if(H.has('chest')||H.has('back'))Q('g-hlp',[ins(mL,mR),ins(mR,mL),ins(torso[2],torso[3]),ins(torso[3],torso[2])]);
+    if(H.has('abs'))Q('g-hlp',[ins(j.hL,j.hR),ins(j.hR,j.hL),ins(mR,mL),ins(mL,mR)]);
+    if(H.has('glute')){C('g-hlc',j.hL,4);C('g-hlc',j.hR,4);}
+    L('g-n',j.top,j.head,4);C('g-hd',j.head,FG.head);
+    limb('g-n',j.shL,j.eL,5,'ua');limb('g-n',j.eL,j.aL,4.6,'fa');limb('g-n',j.shR,j.eR,5,'ua');limb('g-n',j.eR,j.aR,4.6,'fa');
+    if(H.has('delt')){L('g-hl',j.shL,mid(j.shL,j.eL,.45),6);L('g-hl',j.shR,mid(j.shR,j.eR,.45),6);}
+    C('g-hand',j.aL,2.7);C('g-hand',j.aR,2.7);
   }else{
-    L(far,j.hip,j.k2,5);L(far,j.k2,j.f2,5);L(far,j.sh,j.e2,5);L(far,j.e2,j.a2,5);
-    L('n',j.hip,j.neck,6);C('hd',j.head,FG.head);
-    L('n',j.hip,j.k,5);L('n',j.k,j.f,5);L('n',j.sh,j.e,5);L('n',j.e,j.a,5);
+    const pp=j.t+90,torso=[P(j.hip,3.6,pp),P(j.hip,3.6,pp+180),P(j.top,5.2,pp+180),P(j.top,5.2,pp)];
+    limb('g-f',j.hip,j.k2,5.2,'th');limb('g-f',j.k2,j.f2,5,'calf');L('g-f',j.f2,j.toe2,4);
+    limb('g-f',j.sh,j.e2,5,'ua');limb('g-f',j.e2,j.a2,4.6,'fa');C('g-handf',j.a2,2.6);
+    Q('g-tor',torso);
+    // přední strana trupu = prsa a břicho, zadní strana = záda
+    const mc=mid(j.hip,j.top),m1=mid(torso[0],torso[3]),m2=mid(torso[1],torso[2]),tc=P(j.top,1,j.t+180);
+    if(H.has('chest'))Q('g-hlp',[mc,m1,torso[3],tc]);
+    if(H.has('back'))Q('g-hlp',[mc,m2,torso[2],tc]);
+    if(H.has('abs'))Q('g-hlp',[P(j.hip,2,j.t),torso[0],m1,mc]);
+    L('g-n',j.top,j.head,4);C('g-hd',j.head,FG.head);
+    if(H.has('glute'))C('g-hlc',j.hip,5);
+    limb('g-n',j.hip,j.k,5.4,'th');limb('g-n',j.k,j.f,5,'calf');L('g-n',j.f,j.toe,4);
+    limb('g-n',j.sh,j.e,5.2,'ua');limb('g-n',j.e,j.a,4.8,'fa');
+    if(H.has('delt'))L('g-hl',P(j.sh,1,ang(j.sh,j.e)),mid(j.sh,j.e,.45),6.4);
+    C('g-hand',j.a,2.8);
   }
   // náčiní v rukou a podložky
   props.forEach(q=>{
     const at=q.at&&J(q.at);
-    if(q.k==='bar'){if(def.m==='f'){const y=(j.aL[1]+j.aR[1])/2;L('eqb',[j.aL[0]-14,y],[j.aR[0]+14,y],3);L('pl',[j.aL[0]-14,y-8],[j.aL[0]-14,y+8],5);L('pl',[j.aR[0]+14,y-8],[j.aR[0]+14,y+8],5);}
-      else{C('pl',at,q.r||9);C('hub',at,2.2);}}
-    if(q.k==='db'){if(def.m==='f'){[j.aL,j.aR].forEach(a=>{L('eqb',[a[0]-5,a[1]],[a[0]+5,a[1]],3);L('pl',[a[0]-5,a[1]-3.5],[a[0]-5,a[1]+3.5],3.5);L('pl',[a[0]+5,a[1]-3.5],[a[0]+5,a[1]+3.5],3.5);});}
-      else{C('pl',at,4.6);if(q.both)C('pl',J('a2'),4.6);}}
-    if(q.k==='dbc'){const m=lerpP(j.aL,j.aR,.5);C('pl',[m[0],m[1]+3],5);}
-    if(q.k==='kb'){C('pl',[at[0],at[1]+6],6);L('eqb',[at[0]-3.5,at[1]+1],[at[0]+3.5,at[1]+1],2);}
-    if(q.k==='plate'){C('pl',at,7.5);C('hub',at,2.2);}
-    if(q.k==='wheel'){C('pl',[at[0],at[1]+1],6.5);C('hub',[at[0],at[1]+1],2);}
-    if(q.k==='handle')L('eqb',[at[0],at[1]-4],[at[0],at[1]+4],3);
-    if(q.k==='roll')C('eqf',at,4.5);
-    if(q.k==='plat'){const d=q.ang||-45;L('eqb',P(at,9,d),P(at,9,d+180),4);}
+    if(q.k==='bar'&&!q.back){if(fr){const y=(j.aL[1]+j.aR[1])/2,x0=j.aL[0]-15,x1=j.aR[0]+15;L('g-eqb',[x0-4,y],[x1+4,y],2.6);L('g-plf',[x0,y-8],[x0,y+8],5);L('g-plf',[x1,y-8],[x1,y+8],5);}
+      else plate(q,at);}
+    if(q.k==='db'){if(fr){[j.aL,j.aR].forEach(a=>{L('g-eqb',[a[0]-6,a[1]],[a[0]+6,a[1]],2.6);L('g-plf',[a[0]-6,a[1]-4],[a[0]-6,a[1]+4],3.6);L('g-plf',[a[0]+6,a[1]-4],[a[0]+6,a[1]+4],3.6);});}
+      else{C('g-plo',at,5);C('g-hub',at,1.6);}}
+    if(q.k==='dbc'){const m=mid(j.aL,j.aR);L('g-plf',[m[0]-5,m[1]+1],[m[0]+5,m[1]+1],3.6);L('g-eqb',[m[0],m[1]+1],[m[0],m[1]+11],2.6);L('g-plf',[m[0]-5,m[1]+11],[m[0]+5,m[1]+11],3.6);}
+    if(q.k==='kb'){C('g-plo',[at[0],at[1]+7],6.2);L('g-eqb',[at[0]-4,at[1]+1.5],[at[0]+4,at[1]+1.5],2.2);}
+    if(q.k==='plate'){C('g-plo',at,8);C('g-pli',at,4.6);C('g-hub',at,1.9);}
+    if(q.k==='wheel'){C('g-plo',[at[0],at[1]+2],6.5);C('g-hub',[at[0],at[1]+2],1.9);}
+    if(q.k==='handle')L('g-eqb',[at[0],at[1]-5],[at[0],at[1]+5],3);
+    if(q.k==='roll')C('g-roll',at,4.6);
+    if(q.k==='plat'){const d=q.ang||-45;L('g-pad',P(at,10,d),P(at,10,d+180),5);}
   });
   return out;
 }
@@ -829,34 +882,40 @@ const ease=x=>(1-Math.cos(Math.PI*x))/2;
 const FIG_CACHE={};
 function figSVG(id,o={}){
   const def=FIGS[id]; if(!def) return '';
-  const anim=o.anim&&!def.still&&!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
-  const key=id+(anim?':a':':s')+(o.t!=null?':'+o.t:''); if(FIG_CACHE[key]) return FIG_CACHE[key];
-  const B=def.B?blend(def.A,def.B,1):def.A;
+  const rm=typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const anim=o.anim&&!def.still&&!rm;
+  const part=o.part||(typeof EX!=='undefined'&&EX[id]?EX[id].part:'');
+  const hl=o.hl===false?[]:(HL_EX[id]||HL_PART[part]||[]);
+  const key=[id,anim?'a':'s',o.t??'',o.both?'b':'',hl.join('+')].join(':'); if(FIG_CACHE[key]) return FIG_CACHE[key];
   const pose=t=>def.B?blend(def.A,def.B,t):def.A;
-  const N=10, ts=[]; if(anim){for(let i=0;i<=N;i++)ts.push(ease(i/N));ts.push(1);for(let i=N;i>=0;i--)ts.push(ease(i/N));ts.unshift(0);}
-  const frames=anim?ts.map(t=>prims(def,pose(t))):[prims(def,o.t!=null?pose(o.t):(def.still?def.A:B))];
-  const f0=frames[0], R=v=>Math.round(v*10)/10;
+  const N=12, ts=[]; if(anim){ts.push(0,0);for(let i=1;i<=N;i++)ts.push(ease(i/N));ts.push(1,1);for(let i=N-1;i>=0;i--)ts.push(ease(i/N));}
+  const st=o.t!=null?o.t:(def.still?0:1);
+  const frames=anim?ts.map(t=>prims(def,pose(t),hl)):[prims(def,pose(st),hl)];
+  const f0=frames[0], R=v=>Math.round(v*10)/10, pts=a=>a.map(q=>R(q[0])+','+R(q[1])).join(' ');
   const body=f0.map((pr,i)=>{
-    const [k,c]=pr; const attrs=k==='l'?['x1','y1','x2','y2']:['cx','cy'];
-    const base=k==='l'?`<line class="g-${c}" x1="${R(pr[2])}" y1="${R(pr[3])}" x2="${R(pr[4])}" y2="${R(pr[5])}" stroke-width="${pr[6]}"`:`<circle class="g-${c}" cx="${R(pr[2])}" cy="${R(pr[3])}" r="${pr[4]}"`;
+    const [k,c]=pr; let base,attrs,tag;
+    if(k==='l'){tag='line';attrs=[['x1',2],['y1',3],['x2',4],['y2',5]];base=`<line class="${c}" x1="${R(pr[2])}" y1="${R(pr[3])}" x2="${R(pr[4])}" y2="${R(pr[5])}" stroke-width="${pr[6]}"`;}
+    else if(k==='c'){tag='circle';attrs=[['cx',2],['cy',3]];base=`<circle class="${c}" cx="${R(pr[2])}" cy="${R(pr[3])}" r="${pr[4]}"`;}
+    else if(k==='r'){return `<rect class="${c}" x="${pr[2]}" y="${pr[3]}" width="${pr[4]}" height="${pr[5]}" rx="2"/>`;}
+    else {tag='polygon';attrs=null;base=`<polygon class="${c}" points="${pts(pr[2])}"`;}
     let an='';
-    if(anim) attrs.forEach((at,ai)=>{const vals=frames.map(fr=>R(fr[i][2+ai]));if(vals.some(v=>v!==vals[0]))an+=`<animate attributeName="${at}" dur="2.8s" repeatCount="indefinite" values="${vals.join(';')}"/>`;});
-    return an?`${base}>${an}</${k==='l'?'line':'circle'}>`:`${base}/>`;
+    if(anim){
+      if(attrs) attrs.forEach(([at,ix])=>{const vals=frames.map(fr=>R(fr[i][ix]));if(vals.some(v=>v!==vals[0]))an+=`<animate attributeName="${at}" dur="3.2s" repeatCount="indefinite" values="${vals.join(';')}"/>`;});
+      else{const vals=frames.map(fr=>pts(fr[i][2]));if(vals.some(v=>v!==vals[0]))an+=`<animate attributeName="points" dur="3.2s" repeatCount="indefinite" values="${vals.join(';')}"/>`;}
+    }
+    return an?`${base}>${an}</${tag}>`:`${base}/>`;
   }).join('');
-  // Výřez podle postavy a vybavení ve všech snímcích animace
-  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
-  frames.forEach(fr=>fr.forEach(pr=>{const pts=pr[0]==='l'?[[pr[2],pr[3],pr[6]/2],[pr[4],pr[5],pr[6]/2]]:[[pr[2],pr[3],pr[4]]];
-    pts.forEach(([x,y,r])=>{x0=Math.min(x0,x-r);x1=Math.max(x1,x+r);y0=Math.min(y0,y-r);y1=Math.max(y1,y+r);});}));
-  y1=Math.max(y1,FG.G+2.5); const pad=7; x0-=pad;y0-=pad;x1+=pad;y1+=3;
-  const w=x1-x0,h=y1-y0;
-  return FIG_CACHE[key]=`<svg class="fig" viewBox="${R(x0)} ${R(y0)} ${R(w)} ${R(h)}" role="img" aria-label="${o.label||''}"><line class="g-gnd" x1="${R(x0+2)}" y1="${FG.G+1.5}" x2="${R(x1-2)}" y2="${FG.G+1.5}" stroke-width="2"/>${body}</svg>`;
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;const grow=(x,y,r)=>{x0=Math.min(x0,x-r);x1=Math.max(x1,x+r);y0=Math.min(y0,y-r);y1=Math.max(y1,y+r);};
+  (o.both&&def.B?[prims(def,pose(0),hl),prims(def,pose(1),hl)]:frames).forEach(fr=>fr.forEach(pr=>{if(pr[0]==='l'){grow(pr[2],pr[3],pr[6]/2);grow(pr[4],pr[5],pr[6]/2);}else if(pr[0]==='c')grow(pr[2],pr[3],pr[4]);else if(pr[0]==='r'){grow(pr[2],pr[3],0);grow(pr[2]+pr[4],pr[3]+pr[5],0);}else pr[2].forEach(q=>grow(q[0],q[1],0));}));
+  y1=Math.max(y1,FG.G+2.5);const pad=8;x0-=pad;y0-=pad;x1+=pad;y1+=3;
+  return FIG_CACHE[key]=`<svg class="fig" viewBox="${R(x0)} ${R(y0)} ${R(x1-x0)} ${R(y1-y0)}" role="img" aria-label="${o.label||''}"><line class="g-gnd" x1="${R(x0+2)}" y1="${FG.G+1.5}" x2="${R(x1-2)}" y2="${FG.G+1.5}" stroke-width="2"/>${body}</svg>`;
 }
 
 // Pózy cviků: A = začátek, B = konec (doplňuje A), p = vybavení
 const FIGS=(()=>{
 const G=FG.G, X=Object.assign;
 const ST=(x=100,o={})=>X({h:[x,82],t:-90,a:[x+2,81],f:[x+1,G],f2:[x-2,G]},o);
-const plank=(fx,deg,fy=G)=>{const f=[fx,fy],h=P(f,44,-deg);return {h,t:-deg,f,f2:[fx-3,fy]};};
+const plank=(fx,deg,fy=G-6)=>{const f=[fx,fy],h=P(f,44,-deg);return {h,t:-deg,f,f2:[fx-3,fy],fa:75};};
 const kneel=(kx,deg,ky=124)=>{const k=[kx,ky],h=P(k,22,-deg);return {h,t:-deg,_k:k};};
 const flat={k:'bench',x1:62,y1:98,x2:138,y2:98};
 const seat=(x1=62,x2=98,y=100,back=true)=>[{k:'bench',x1,y1:y,x2,y2:y},...(back?[{k:'line',x1:x1+6,y1:y,x2:x1+4,y2:y-46,w:5,c:'eqb'}]:[])];
@@ -865,9 +924,9 @@ const add=(ids,def)=>ids.split(' ').forEach(id=>F[id]=def);
 
 // ---------- HRUDNÍK ----------
 const lie={h:[118,92],t:180,a:[84,59],f:[134,G]};
-add('bench cgbp',{m:'s',A:lie,B:{a:[88,86]},p:[flat,{k:'bar',at:'a'}]});
-add('fly',{m:'s',A:lie,B:{a:[100,96]},p:[flat,{k:'db',at:'a'}]});
-add('declbench',{m:'s',A:{h:[116,88],t:168,a:[83,62],f:[132,G]},B:{a:[86,90]},p:[{k:'bench',x1:62,y1:103,x2:132,y2:94},{k:'bar',at:'a'}]});
+add('bench cgbp',{m:'s',A:lie,B:{a:[88,86]},p:[{k:'rack',x:70,y:58},flat,{k:'bar',at:'a'}]});
+add('fly',{m:'s',A:lie,B:{a:[96,86]},p:[flat,{k:'db',at:'a'}]});
+add('declbench',{m:'s',A:{h:[116,88],t:168,a:[83,62],f:[132,G]},B:{a:[86,90]},p:[{k:'rack',x:68,y:60},{k:'bench',x1:62,y1:103,x2:132,y2:94},{k:'bar',at:'a'}]});
 add('incdb',{m:'s',A:{h:[112,98],t:-145,a:[86,46],f:[132,G]},B:{a:[90,74]},p:[{k:'bench',x1:76,y1:72,x2:122,y2:104,legs:false},{k:'line',x1:110,y1:104,x2:110,y2:G},{k:'db',at:'a'}]});
 add('dbfloor',{m:'s',A:{h:[118,118],t:180,a:[84,86],f:[136,G]},B:{a:[88,112]},p:[{k:'db',at:'a'}]});
 add('machpress',{m:'s',A:{h:[80,98],t:-88,a:[98,66],f:[108,G]},B:{a:[114,66]},p:[...seat(56,94),{k:'handle',at:'a'}]});
@@ -879,7 +938,7 @@ add('benchdip',{m:'s',A:{h:[98,90],t:-92,a:[88,93],f:[142,G],eb:1},B:{h:[98,106]
 const pu=[plank(50,25.7),plank(50,9.8)];
 add('kliky diamond',{m:'s',A:X({},pu[0],{a:[118.4,G]}),B:pu[1]});
 const kp=[kneel(60,33.6),kneel(60,11.3)];
-add('kneepush',{m:'s',A:{h:kp[0].h,t:kp[0].t,a:[106.6,G],f:[42,112],kb:1},B:{h:kp[1].h,t:kp[1].t}});
+add('kneepush',{m:'s',A:{h:kp[0].h,t:kp[0].t,a:[106.6,G],f:[42,112],kb:-1},B:{h:kp[1].h,t:kp[1].t}});
 const ip=[plank(46,50),plank(46,34)];
 add('incpush',{m:'s',A:X({},ip[0],{a:[102,98]}),B:ip[1],p:[{k:'box',x:94,y:96,w:40}]});
 add('pike',{m:'s',A:{h:[84,82],t:26.6,a:[120,G],f:[66,G],f2:[63,G]},B:{h:[86,84],t:43}});
@@ -894,18 +953,18 @@ add('tbar',{m:'s',A:{h:[88,84],t:-35,a:[118,98],f:[100,G],f2:[97,G]},B:{a:[106,8
 add('dbrow',{m:'s',A:{h:[78,88],t:-5,a:[114,116],a2:[110,98],f:[84,G],f2:[56,96],kb2:1},B:{a:[100,90]},p:[{k:'box',x:52,y:96,w:64},{k:'db',at:'a'}]});
 add('cablerow',{m:'s',A:{h:[80,108],t:-82,a:[118,82],f:[124,112]},B:{t:-95,a:[96,96]},p:[{k:'bench',x1:62,y1:112,x2:98,y2:112},{k:'line',x1:130,y1:100,x2:130,y2:120,w:4,c:'eqb'},{k:'cable',at:'a',to:[176,96]},{k:'handle',at:'a'}]});
 add('latpd',{m:'s',A:{h:[100,100],t:-95,a:[104,26],f:[126,G]},B:{t:-100,a:[102,62]},p:[...seat(80,116,104,false),{k:'roll',at:[118,92]},{k:'cable',at:'a',to:[104,6]},{k:'handle',at:'a'}]});
-const hang={h:[100,81],t:-90,a:[100,15],f:[96,122],kb:1,eb:1};
+const hang={h:[100,81],t:-90,a:[100,15],f:[96,120],kb:1,eb:1,fa:70};
 add('pullup chinup',{m:'s',A:hang,B:{h:[100,52],f:[96,93]},p:[{k:'pbar',x1:70,x2:130,y:13}]});
 add('bandpull',{m:'s',A:hang,B:{h:[100,52],f:[96,93]},p:[{k:'pbar',x1:70,x2:130,y:13},{k:'band',at:'k',to:[100,14]}]});
-const trx=[plank(60,45),plank(60,62)];
-add('trxrow',{m:'s',A:X({},trx[0],{a:[66,8]}),B:X({},trx[1],{a:[96,52],eb:-1}),p:[{k:'cable',at:'a',to:[66,6]}]});
+const trx=[plank(60,45,G-1),plank(60,62,G-1)];
+add('trxrow',{m:'s',A:X({},trx[0],{a:[66,8],f:[60,G-1],f2:[57,G-1],fa:-120}),B:X({},trx[1],{a:[96,52],eb:-1}),p:[{k:'cable',at:'a',to:[66,6]}]});
 add('pullover',{m:'s',A:{h:[96,84],t:-70,a:[132,30],f:[100,G],f2:[96,G]},B:{a:[110,88]},p:[{k:'cable',at:'a',to:[154,10]},{k:'handle',at:'a'}]});
-add('shrug',{m:'s',A:ST(100,{a:[102,82]}),B:{su:5,a:[102,77]},p:[{k:'db',at:'a'}]});
+add('shrug',{m:'s',A:ST(100,{a:[102,82]}),B:{su:8,a:[102,74]},p:[{k:'db',at:'a'}]});
 add('facepull',{m:'s',A:ST(100,{a:[132,38]}),B:{a:[110,40],eb:-1},p:[{k:'cable',at:'a',to:[172,34]}]});
 
 // ---------- RAMENA ----------
-add('ohp',{m:'s',A:ST(100,{a:[107,50]}),B:{a:[101,14]},p:[{k:'bar',at:'a'}]});
-add('dbsp arnold',{m:'s',A:{h:[90,100],t:-90,a:[96,64],f:[116,G]},B:{a:[93,32]},p:[...seat(66,100),{k:'db',at:'a'}]});
+add('ohp',{m:'s',A:ST(100,{a:[107,50]}),B:{a:[110,16]},p:[{k:'bar',at:'a'}]});
+add('dbsp',{m:'s',A:{h:[90,100],t:-90,a:[96,64],f:[116,G]},B:{a:[97,33]},p:[...seat(66,100),{k:'db',at:'a'}]});
 add('landmine',{m:'s',A:ST(100,{a:[110,48],f:[108,G],f2:[88,G]}),B:{a:[130,24]},p:[{k:'rod',at:'a',to:[38,G]},{k:'handle',at:'a'}]});
 add('rear',{m:'s',A:{h:[86,84],t:-15,a:[120,110],f:[98,G],f2:[94,G]},B:{a:[124,64]},p:[{k:'db',at:'a'}]});
 const FR=(o={})=>X({c:[100,82],aL:[87,83],aR:[113,83],fL:[94,G],fR:[106,G]},o);
@@ -914,6 +973,7 @@ add('cablelat',{m:'f',A:FR({aR:[104,84]}),B:{aR:[134,50]},p:[{k:'cable',at:'aR',
 add('pullapart',{m:'f',A:FR({aL:[95,52],aR:[105,52]}),B:{aL:[66,52],aR:[134,52]},p:[{k:'band',at:'aL',to:'aR'}]});
 add('uprow',{m:'f',A:FR({aL:[95,84],aR:[105,84]}),B:{aL:[94,58],aR:[106,58]},p:[{k:'bar'}]});
 
+add('arnold',{m:'s',A:{h:[90,100],t:-90,a:[104,58],f:[116,G]},B:{a:[97,33]},p:[...seat(66,100),{k:'db',at:'a'}]});
 // ---------- BICEPS ----------
 const curl={m:'s',A:ST(100,{a:[104,81]}),B:{a:[110,52]}};
 add('bbcurl revcurl',X({},curl,{p:[{k:'bar',at:'a'}]}));
@@ -932,25 +992,25 @@ add('dbskull',{m:'s',A:X({},lie,{a:[86,59]}),B:{a:[70,78]},p:[flat,{k:'db',at:'a
 add('trikick',{m:'s',A:{h:[84,86],t:-12,a:[104,96],a2:[122,100],f:[94,G],f2:[86,G]},B:{a:[86,80]},p:[{k:'box',x:110,y:100,w:40},{k:'db',at:'a'}]});
 
 // ---------- NOHY ----------
-add('squat',{m:'s',A:ST(100,{a:[96,47],f:[102,G],f2:[99,G]}),B:{h:[82,104],t:-55,a:[98,74]},p:[{k:'bar',at:'a'}]});
+add('squat',{m:'s',A:ST(100,{a:[95,50],f:[102,G],f2:[99,G]}),B:{h:[82,104],t:-52,a:[99,78]},p:[{k:'bar',at:'a',back:true}]});
 add('front',{m:'s',A:ST(100,{a:[108,50],f:[102,G],f2:[99,G],eb:-1}),B:{h:[84,106],t:-70,a:[104,74]},p:[{k:'bar',at:'a'}]});
 add('goblet',{m:'s',A:ST(100,{a:[108,60],f:[102,G],f2:[99,G]}),B:{h:[84,106],t:-68,a:[106,84]},p:[{k:'kb',at:'a'}]});
-add('hack',{m:'s',A:{h:[104,80],t:-102,a:[96,46],f:[112,G],f2:[109,G]},B:{h:[90,102],a:[83,68]},p:[{k:'line',x1:74,y1:100,x2:102,y2:30,w:5,c:'eqb'},{k:'line',x1:108,y1:G,x2:130,y2:G,w:5,c:'eqb'}]});
-add('legpress',{m:'s',A:{h:[84,108],t:-145,a:[90,106],f:[108,88],f2:[105,90]},B:{f:[120,74],f2:[117,76]},p:[{k:'bench',x1:52,y1:84,x2:90,y2:112,legs:false},{k:'line',x1:84,y1:112,x2:84,y2:G},{k:'plat',at:'f',ang:-45}]});
+add('hack',{m:'s',A:{h:[100,82],t:-100,a:[100,50],f:[114,G-3],f2:[111,G-3]},B:{h:[86,104],a:[86,72]},p:[{k:'line',x1:96,y1:58,x2:70,y2:100,w:3,c:'g-eq'},{k:'line',x1:70,y1:100,x2:70,y2:G,w:3,c:'g-eq'},{k:'backpad'},{k:'pad',x1:104,y1:G-1,x2:128,y2:G-6,w:5}]});
+add('legpress',{m:'s',A:{h:[84,108],t:-145,a:[90,106],f:[108,88],f2:[105,90]},B:{f:[120,74],f2:[117,76]},p:[{k:'bench',x1:52,y1:84,x2:90,y2:112,legs:false},{k:'line',x1:84,y1:112,x2:84,y2:G},{k:'plat',at:'toe',ang:50}]});
 add('bulg',{m:'s',A:{h:[96,80],t:-90,a:[98,80],f:[114,G],f2:[50,97],kb2:1},B:{h:[94,102],a:[96,102]},p:[{k:'box',x:30,y:96,w:30},{k:'db',at:'a'}]});
-add('stepup',{m:'s',A:{h:[96,84],t:-86,a:[100,84],f:[124,103],f2:[92,G]},B:{h:[118,62],a:[121,62],f2:[114,103]},p:[{k:'box',x:106,y:102,w:44}]});
+add('stepup',{m:'s',A:{h:[102,80],t:-86,a:[105,80],f:[124,103],f2:[94,G]},B:{h:[118,62],a:[121,62],f2:[114,103]},p:[{k:'box',x:106,y:102,w:44}]});
 add('stepdown',{m:'s',A:{h:[96,62],t:-90,a:[98,62],f:[98,103],f2:[96,103]},B:{h:[90,82],f2:[126,G]},p:[{k:'box',x:78,y:102,w:34}]});
 add('revlunge',{m:'s',A:ST(100,{a:[102,82],f:[106,G],f2:[100,G]}),B:{h:[96,104],a:[98,104],f2:[60,G],kb2:1},p:[{k:'db',at:'a'}]});
 add('lunge',{m:'s',A:ST(90,{a:[92,82],f:[92,G],f2:[90,G]}),B:{h:[100,104],a:[102,104],f:[130,G],f2:[64,G],kb2:1},p:[{k:'db',at:'a'}]});
 add('wallsit',{m:'s',still:true,A:{h:[76,102],t:-90,a:[96,100],f:[104,G],f2:[101,G]},p:[{k:'wall',x:68}]});
 add('legext',{m:'s',A:{h:[88,96],t:-94,a:[92,100],f:[112,119]},B:{f:[134,90]},p:[...seat(62,100),{k:'roll',at:'f'}]});
 add('legcurl',{m:'s',A:{h:[80,94],t:0,a:[120,104],f:[36,94],kb:-1},B:{f:[62,70]},p:[{k:'bench',x1:40,y1:100,x2:126,y2:100},{k:'roll',at:'f'}]});
-add('nordic',{m:'s',A:{h:[70,102],t:-90,a:[80,72],f:[46,122],kb:1},B:{h:kneel(70,40).h,t:-40,a:[130,112]},p:[{k:'line',x1:56,y1:G-1,x2:84,y2:G-1,w:5,c:'eqb'},{k:'roll',at:[44,116]}]});
-add('calf',{m:'s',A:ST(100,{a:[102,82],f:[100,121],f2:[98,121]}),B:{h:[100,76],a:[102,76],f:[100,114],f2:[98,114]},p:[{k:'line',x1:84,y1:G-1,x2:110,y2:G-1,w:6,c:'eqb'}]});
-add('seatcalf',{m:'s',A:{h:[80,96],t:-90,a:[100,92],f:[104,121]},B:{f:[104,115]},p:[...seat(58,94),{k:'roll',at:[104,92]}]});
+add('nordic',{m:'s',A:{h:[70,102],t:-90,a:[80,72],f:[46,122],kb:-1,fa:160},B:{h:kneel(70,40).h,t:-40,a:[130,112]},p:[{k:'line',x1:56,y1:G-1,x2:84,y2:G-1,w:5,c:'eqb'},{k:'roll',at:[44,116]}]});
+add('calf',{m:'s',A:ST(100,{h:[100,77],a:[102,77],f:[100,121],f2:[98,121],fa:0}),B:{h:[100,70],a:[102,70],f:[100,114],f2:[98,114],fa:52},p:[{k:'line',x1:84,y1:G-1,x2:110,y2:G-1,w:6,c:'eqb'}]});
+add('seatcalf',{m:'s',A:{h:[80,96],t:-90,a:[100,92],f:[104,121],fa:0},B:{f:[104,115],fa:45},p:[...seat(58,94),{k:'roll',at:[104,92]}]});
 const FW=(o={})=>X({c:[100,82],aL:[96,62],aR:[104,62],fL:[80,G],fR:[120,G]},o);
 add('sumo',{m:'f',A:FW({aL:[97,84],aR:[103,84],fL:[76,G],fR:[124,G]}),B:{c:[100,100],aL:[97,102],aR:[103,102]},p:[{k:'dbc'}]});
-add('curtsy',{m:'f',A:FR({aL:[96,62],aR:[104,62]}),B:{c:[98,98],fL:[90,G],fR:[78,120],kbR:1}});
+add('curtsy',{m:'f',A:FR({aL:[96,62],aR:[104,62]}),B:{c:[92,100],fL:[82,G],fR:[72,118],kbL:1,kbR:-1,faR:200,aL:[88,80],aR:[96,80]}});
 add('latlunge',{m:'f',A:FR({aL:[96,62],aR:[104,62]}),B:{c:[112,98],fL:[70,G],fR:[130,G],aL:[108,78],aR:[116,78]},p:[{k:'dbc'}]});
 add('cossack',{m:'f',A:FW({fL:[64,G],fR:[136,G],c:[100,90]}),B:{c:[120,108],aL:[116,86],aR:[124,86]}});
 
@@ -960,11 +1020,11 @@ const brA={h:[94,118],t:180,a:[90,124],f:[116,G],f2:[113,G]};
 add('bridge frog',{m:'s',A:brA,B:{h:[94,104],t:158}});
 add('sgbridge',{m:'s',A:X({},brA,{f2:[134,98]}),B:{h:[94,104],t:158,f2:[136,74]}});
 add('kick',{m:'s',A:ST(100,{t:-80,a:[126,62],f:[100,G],f2:[98,G]}),B:{f:[62,104]},p:[{k:'line',x1:130,y1:40,x2:130,y2:G,w:4,c:'eqb'},{k:'cable',at:'f',to:[134,120]}]});
-const quad={h:[80,104],t:-8,a:[114,G],f:[58,G],f2:[56,G],kb:1,kb2:1};
+const quad={h:[80,104],t:-8,a:[114,G],f:[58,G-2],f2:[56,G-2],kb:1,kb2:1,fa:180};
 add('donkey',{m:'s',A:quad,B:{f:[58,72],kb:1}});
 add('birddog',{m:'s',A:quad,B:{a:[148,94],f2:[36,98],kb2:1}});
-add('hydrant',{m:'f',A:{c:[100,100],tl:12,aL:[90,G],aR:[110,G],fL:[96,G],fR:[104,G],kbL:1,kbR:-1},B:{fR:[132,104]}});
-add('abd',{m:'f',A:{c:[100,98],aL:[84,100],aR:[116,100],fL:[96,G],fR:[104,G],kbL:1,kbR:-1},B:{fL:[80,G],fR:[120,G]},p:[{k:'roll',at:'kL'},{k:'roll',at:'kR'}]});
+add('hydrant',{m:'f',A:{c:[100,100],tl:10,shl:4,aL:[88,G],aR:[112,G],fL:[93,G],fR:[107,G],kbL:1,kbR:-1,faL:270,faR:270},B:{fR:[131,103],faR:0}});
+add('abd',{m:'f',A:{c:[100,98],thl:9,aL:[82,104],aR:[118,104],fL:[97,G],fR:[103,G],kbL:1,kbR:-1},B:{fL:[80,G],fR:[120,G]},p:[{k:'pad',x1:78,y1:104,x2:122,y2:104,w:7},{k:'roll',at:'kL'},{k:'roll',at:'kR'}]});
 add('bandwalk',{m:'f',A:FR({c:[96,86],fL:[88,G],fR:[104,G],aL:[90,66],aR:[102,66]}),B:{c:[106,86],fL:[94,G],fR:[126,G]},p:[{k:'band',at:'kL',to:'kR'}]});
 add('clam',{m:'s',A:{h:[104,116],t:180,a:[62,104],f:[140,113],f2:[140,118],kb:1,kb2:1},B:{kb:-1},p:[{k:'band',at:'k',to:'k2'}]});
 add('pullthru',{m:'s',A:{h:[88,84],t:-38,a:[86,108],f:[102,G],f2:[98,G]},B:ST(100,{a:[106,84],f:[102,G],f2:[98,G]}),p:[{k:'cable',at:'a',to:[40,120]},{k:'handle',at:'a'}]});
@@ -974,9 +1034,9 @@ add('kbswing',{m:'s',A:{h:[86,90],t:-35,a:[94,104],f:[102,G],f2:[98,G]},B:ST(100
 const pl=plank(50,13.7);
 add('plank',{m:'s',still:true,A:X({},pl,{a:[140,123],eb:-1})});
 add('sideplank',{m:'s',still:true,A:X({},pl,{a:[124,72],a2:[140,123],eb2:-1})});
-add('hlr',{m:'s',A:X({},hang,{f:[100,124],f2:[97,124],kb:-1}),B:{f:[144,80],f2:[141,82]},p:[{k:'pbar',x1:70,x2:130,y:13}]});
+add('hlr',{m:'s',A:X({},hang,{f:[100,119],f2:[97,119],kb:-1}),B:{f:[144,80],f2:[141,82],fa:-60},p:[{k:'pbar',x1:70,x2:130,y:13}]});
 add('wheel',{m:'s',A:{h:[66,102],t:-12,a:[100,119],f:[42,114],kb:1},B:{h:kneel(60,28).h,t:-6,a:[144,119]},p:[{k:'wheel',at:'a'}]});
-add('cablecr',{m:'s',A:{h:[96,102],t:-90,a:[102,62],f:[74,G],kb:1},B:{t:-30,a:[124,82]},p:[{k:'cable',at:'a',to:[104,6]}]});
+add('cablecr',{m:'s',A:{h:[96,102],t:-90,a:[102,62],f:[74,G-2],kb:1,fa:180},B:{t:-30,a:[124,82]},p:[{k:'cable',at:'a',to:[104,6]}]});
 add('pallof',{m:'s',A:ST(100,{a:[108,62]}),B:{a:[134,62]},p:[{k:'cable',at:'a',to:[48,62]},{k:'handle',at:'a'}]});
 add('deadbug',{m:'s',A:{h:[110,118],t:180,a:[78,86],f:[132,96],kb:-1},B:{a:[46,112],f2:[154,114]}});
 add('revcrunch',{m:'s',A:{h:[108,118],t:180,a:[100,124],f:[124,98]},B:{h:[104,112],t:176,f:[94,90]}});
@@ -1636,6 +1696,8 @@ function openInfo(id){
    <div class="hd"><div><h2 id="shTitle">${e.n}</h2><div class="mt">${e.partName} · ${e.m} · ${e.eq}</div></div><button class="x" data-close aria-label="Zavřít">${I.del}</button></div>
    <div class="bd">
      <div class="figbox">${figSVG(id,{anim:true,label:'Ukázka pohybu: '+e.n})}</div>
+     ${FIGS[id]&&!FIGS[id].still?`<div class="figpair"><figure>${figSVG(id,{t:0,both:true,label:'Výchozí poloha'})}<figcaption>Výchozí poloha</figcaption></figure><figure>${figSVG(id,{t:1,both:true,label:'Konečná poloha'})}<figcaption>Konečná poloha</figcaption></figure></div>`:''}
+     <p class="figleg"><i></i>Barevně je hlavní zapojená partie</p>
      <div><h4>Dávkování pro cíl ${GOALS[S.goal].label.toLowerCase()}</h4><div class="dosebox"><span>${r.sets} ${plural(r.sets,'série','série','sérií')}</span><span>${repsLabel(e,r)}</span><span>pauza ${fmtRest(r.rest)}</span>${e.t!=='t'?`<span>${GOALS[S.goal].intensity}</span>`:''}</div></div>
      ${chartHtml(id)}
      ${histHtml(id)}
