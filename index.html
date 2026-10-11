@@ -434,6 +434,7 @@ nav.tabs{grid-template-columns:repeat(4,1fr)}
 .fig .g-cab{stroke:var(--muted)}
 .fig .g-band{stroke:var(--red)}
 .fig .g-gnd{stroke:var(--line)}
+.fig .g-halo{stroke:var(--sunk)}
 .figbox{background:var(--sunk);border-radius:12px;padding:12px}
 .figbox .fig{height:196px}
 .ex{grid-template-columns:76px minmax(0,1fr) auto}
@@ -841,6 +842,7 @@ function prims(def,p,hl){
     if(H.has('abs'))Q('g-hlp',[ins(j.hL,j.hR),ins(j.hR,j.hL),ins(mR,mL),ins(mL,mR)]);
     if(H.has('glute')){C('g-hlc',j.hL,4);C('g-hlc',j.hR,4);}
     L('g-n',j.top,j.head,4);C('g-hd',j.head,FG.head);
+    [[j.shL,j.eL],[j.eL,j.aL],[j.shR,j.eR],[j.eR,j.aR]].forEach(([a,b])=>L('g-halo',a,b,7.6));
     limb('g-n',j.shL,j.eL,5,'ua');limb('g-n',j.eL,j.aL,4.6,'fa');limb('g-n',j.shR,j.eR,5,'ua');limb('g-n',j.eR,j.aR,4.6,'fa');
     if(H.has('delt')){L('g-hl',j.shL,mid(j.shL,j.eL,.45),6);L('g-hl',j.shR,mid(j.shR,j.eR,.45),6);}
     C('g-hand',j.aL,2.7);C('g-hand',j.aR,2.7);
@@ -856,7 +858,10 @@ function prims(def,p,hl){
     if(H.has('abs'))Q('g-hlp',[P(j.hip,2,j.t),torso[0],m1,mc]);
     L('g-n',j.top,j.head,4);C('g-hd',j.head,FG.head);
     if(H.has('glute'))C('g-hlc',j.hip,5);
+    L('g-halo',j.hip,j.k,8.4);L('g-halo',j.k,j.f,8);
     limb('g-n',j.hip,j.k,5.4,'th');limb('g-n',j.k,j.f,5,'calf');L('g-n',j.f,j.toe,4);
+    // obrys odliší paži od trupu, když visí podél těla
+    L('g-halo',j.sh,j.e,8.2);L('g-halo',j.e,j.a,7.8);
     limb('g-n',j.sh,j.e,5.2,'ua');limb('g-n',j.e,j.a,4.8,'fa');
     if(H.has('delt'))L('g-hl',P(j.sh,1,ang(j.sh,j.e)),mid(j.sh,j.e,.45),6.4);
     C('g-hand',j.a,2.8);
@@ -992,7 +997,7 @@ add('dbskull',{m:'s',A:X({},lie,{a:[86,59]}),B:{a:[70,78]},p:[flat,{k:'db',at:'a
 add('trikick',{m:'s',A:{h:[84,86],t:-12,a:[104,96],a2:[122,100],f:[94,G],f2:[86,G]},B:{a:[86,80]},p:[{k:'box',x:110,y:100,w:40},{k:'db',at:'a'}]});
 
 // ---------- NOHY ----------
-add('squat',{m:'s',A:ST(100,{a:[95,50],f:[102,G],f2:[99,G]}),B:{h:[82,104],t:-52,a:[99,78]},p:[{k:'bar',at:'a',back:true}]});
+add('squat',{m:'s',A:ST(100,{a:[89,50],f:[102,G],f2:[99,G],eb:-1}),B:{h:[82,104],t:-52,a:[93,73]},p:[{k:'bar',at:'a',back:true}]});
 add('front',{m:'s',A:ST(100,{a:[108,50],f:[102,G],f2:[99,G],eb:-1}),B:{h:[84,106],t:-70,a:[104,74]},p:[{k:'bar',at:'a'}]});
 add('goblet',{m:'s',A:ST(100,{a:[108,60],f:[102,G],f2:[99,G]}),B:{h:[84,106],t:-68,a:[106,84]},p:[{k:'kb',at:'a'}]});
 add('hack',{m:'s',A:{h:[100,82],t:-100,a:[100,50],f:[114,G-3],f2:[111,G-3]},B:{h:[86,104],a:[86,72]},p:[{k:'line',x1:96,y1:58,x2:70,y2:100,w:3,c:'g-eq'},{k:'line',x1:70,y1:100,x2:70,y2:G,w:3,c:'g-eq'},{k:'backpad'},{k:'pad',x1:104,y1:G-1,x2:128,y2:G-6,w:5}]});
