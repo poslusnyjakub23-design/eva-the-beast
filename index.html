@@ -19,6 +19,8 @@
 html{box-sizing:border-box;background:var(--bg)}
 body{margin:0;font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
 img{max-width:100%}
+.updbar{position:fixed;left:16px;right:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:40;padding:13px 16px;border-radius:14px;background:var(--goal);color:var(--on-plate);font:500 14px/1.35 var(--body);text-align:left;box-shadow:0 8px 28px rgba(0,0,0,.28);max-width:528px;margin:0 auto}
+.updbar b{font-weight:700}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1297,7 +1299,15 @@ document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&!$('#sheet').hidd
 renderGoals(); render();
 </script>
 <script>
-if('serviceWorker' in navigator){addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').catch(()=>{});});}
+if('serviceWorker' in navigator){
+  // Lišta s nabídkou načíst novou verzi
+  const showUpdate=()=>{if(document.getElementById('upd'))return;const b=document.createElement('button');b.id='upd';b.className='updbar';
+    b.innerHTML='<b>Je připravená nová verze.</b> Ťukni pro načtení.';b.onclick=()=>location.reload();document.body.appendChild(b);};
+  navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.type==='update')showUpdate();});
+  let hadCtrl=!!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(hadCtrl)showUpdate();hadCtrl=true;});
+  addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').then(r=>r.update&&r.update()).catch(()=>{});});
+}
 </script>
 </body>
 </html>

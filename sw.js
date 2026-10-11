@@ -1,6 +1,6 @@
 // Overload – offline provoz
 // Aplikace se spouští okamžitě z telefonu, aktualizace se stahují na pozadí.
-const VERSION='ovl-v3';
+const VERSION='ovl-v4';
 const FONTS='etb-fonts';
 const CORE=['./','./index.html','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./icons/maskable-512.png','./icons/apple-touch-icon.png','./icons/favicon-32.png'];
 const timeout=(p,ms)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]);
@@ -8,7 +8,16 @@ const timeout=(p,ms)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(ne
 const clean=r=>r.redirected?r.blob().then(b=>new Response(b,{status:r.status,statusText:r.statusText,headers:r.headers})):Promise.resolve(r);
 self.addEventListener('install',e=>{e.waitUntil(caches.open(VERSION).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==VERSION&&k!==FONTS).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
-function refresh(){return fetch('./index.html',{cache:'no-cache'}).then(clean).then(r=>{if(r.ok)return caches.open(VERSION).then(c=>c.put('./index.html',r));}).catch(()=>{});}
+// Stáhne novou verzi na pozadí; když se liší od uložené, dá aplikaci vědět
+function refresh(){
+  return Promise.all([fetch('./index.html',{cache:'no-cache'}).then(clean),caches.match('./index.html')]).then(([r,old])=>{
+    if(!r.ok) return;
+    return Promise.all([r.clone().text(),old?old.text():Promise.resolve('')]).then(([fresh,prev])=>
+      caches.open(VERSION).then(c=>c.put('./index.html',r)).then(()=>{
+        if(prev&&fresh!==prev) return self.clients.matchAll({type:'window'}).then(cs=>cs.forEach(cl=>cl.postMessage({type:'update'})));
+      }));
+  }).catch(()=>{});
+}
 self.addEventListener('fetch',e=>{
   const req=e.request; if(req.method!=='GET') return;
   const url=new URL(req.url);
