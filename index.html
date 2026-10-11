@@ -377,7 +377,7 @@ nav.tabs{grid-template-columns:repeat(4,1fr)}
 .progdays li{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:8px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
 .progdays b{font-family:var(--display);color:var(--goal);font-size:15px;text-transform:uppercase}
 .progdays em{font-style:normal;color:var(--muted);font-size:12.5px}
-.tpl.prog{border-color:color-mix(in srgb,var(--goal) 40%,var(--line))}
+.tpl.isprog{border-color:color-mix(in srgb,var(--goal) 40%,var(--line))}
 .boot{margin:40px 0;text-align:center;color:var(--muted);font-size:15px}
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font-size:13px;font-weight:600;z-index:30;white-space:nowrap;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
@@ -904,7 +904,7 @@ function vSablony(){
   const f=S.tplf||'all', list=f==='prog'?[]:TEMPLATES.filter(t=>f==='all'||t.k.includes(f));
   const progs=(f==='all'||f==='prog')?`<div class="sect"><h3>Týdenní programy</h3><span>${PROGRAMS.length}</span></div>
    <div class="tpls">${PROGRAMS.map(pg=>{const has=S.workouts.some(w=>w.prog===pg.id);
-     return `<article class="tpl prog"><div class="tpltop"><h3>${pg.name}</h3><span class="tag">${pg.freq}</span></div><p>${pg.desc}</p>
+     return `<article class="tpl isprog"><div class="tpltop"><h3>${pg.name}</h3><span class="tag">${pg.freq}</span></div><p>${pg.desc}</p>
       <ol class="progdays">${pg.days.map((tid,i)=>{const t=TEMPLATES.find(x=>x.id===tid);return `<li><b>Den ${i+1}</b><span>${t.name}</span><em>${t.ids.length} ${plural(t.ids.length,'cvik','cviky','cviků')}</em></li>`}).join('')}</ol>
       <div class="tplft"><span>Tréninky se střídají v tomto pořadí. Aplikace ti ukáže, který je na řadě.</span>${has?'<span class="tag">Přidáno</span>':`<button class="tpladd" data-prog="${pg.id}">Přidat program</button>`}</div></article>`}).join('')}</div>
    ${f==='all'?'<div class="sect"><h3>Jednotlivé tréninky</h3><span></span></div>':''}`:'';
