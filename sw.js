@@ -1,6 +1,6 @@
-// Eva the Beast – offline provoz
+// Overload – offline provoz
 // Aplikace se spouští okamžitě z telefonu, aktualizace se stahují na pozadí.
-const VERSION='etb-v2';
+const VERSION='ovl-v3';
 const FONTS='etb-fonts';
 const CORE=['./','./index.html','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./icons/maskable-512.png','./icons/apple-touch-icon.png','./icons/favicon-32.png'];
 const timeout=(p,ms)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]);
