@@ -99,6 +99,7 @@ main{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:16px 16px 28px}
 
 /* Body parts grid */
 .parts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.parts>.part:last-child:nth-child(odd){grid-column:1/-1}
 .part{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:grid;gap:2px;position:relative;transition:transform .12s,border-color .2s}
 .part:active{transform:scale(.98)}
 .part strong{font-family:var(--display);font-size:22px;font-weight:700;text-transform:uppercase;line-height:1.05}
@@ -480,13 +481,13 @@ window.addEventListener('unhandledrejection',function(e){show('Promise: '+(e.rea
 const GOALS = {
   sila:  {label:'Síla', plate:'25', intensity:'85–90 % 1RM',
           desc:'Těžké váhy, málo opakování a dlouhé pauzy, aby se nervová soustava stihla zotavit.',
-          c:{sets:5,reps:'3–5',rest:180}, i:{sets:3,reps:'6–8',rest:90}, t:{sets:3,reps:'20–30 s',rest:60}},
+          c:{sets:5,reps:'3–5',rest:180}, i:{sets:3,reps:'6–8',rest:90}, t:{sets:3,reps:'20–30 s',rest:60}, k:{sets:6,reps:'20–30 s',rest:90}},
   objem: {label:'Objem', plate:'20', intensity:'70–80 % 1RM',
           desc:'Střední zátěž a víc celkové práce. Každou sérii ukonči 1–3 opakování před selháním.',
-          c:{sets:4,reps:'6–10',rest:120}, i:{sets:3,reps:'10–15',rest:60}, t:{sets:3,reps:'40–60 s',rest:45}},
+          c:{sets:4,reps:'6–10',rest:120}, i:{sets:3,reps:'10–15',rest:60}, t:{sets:3,reps:'40–60 s',rest:45}, k:{sets:5,reps:'40–60 s',rest:45}},
   udrz:  {label:'Udržení', plate:'10', intensity:'60–70 % 1RM',
           desc:'Méně sérií stačí k udržení síly i svalů. Hodí se při nedostatku času nebo v odlehčeném týdnu.',
-          c:{sets:3,reps:'8–12',rest:90}, i:{sets:2,reps:'12–15',rest:60}, t:{sets:2,reps:'30–45 s',rest:45}}
+          c:{sets:3,reps:'8–12',rest:90}, i:{sets:2,reps:'12–15',rest:60}, t:{sets:2,reps:'30–45 s',rest:45}, k:{sets:4,reps:'60–90 s',rest:30}}
 };
 
 const PARTS = [
@@ -546,7 +547,20 @@ const PARTS = [
   ['wheel','Kolečko na břicho','přímý sval, core','Kolečko','i',1],
   ['cablecr','Zkracovačky na kladce','přímý sval břišní','Kladka','i'],
   ['pallof','Pallof press','šikmé svaly, core','Kladka','i'],
-  ['sideplank','Boční plank','šikmé svaly','Vlastní váha','t',1]]}
+  ['sideplank','Boční plank','šikmé svaly','Vlastní váha','t',1]]},
+ {id:'kardio',name:'Kardio',lat:'srdce, plíce a vytrvalost',ex:[
+  ['jumpjack','Skákací panák','celé tělo, lýtka, ramena','Vlastní váha','t',1],
+  ['highknees','Skipping s vysokými koleny','flexory kyčle, stehna, core','Vlastní váha','t',1],
+  ['burpee','Angličák (burpee)','celé tělo','Vlastní váha','t',1],
+  ['jumpsquat','Výskoky z dřepu','stehna, hýždě, lýtka','Vlastní váha','t',1],
+  ['skater','Bruslařské skoky','hýždě, stehna, rovnováha','Vlastní váha','t',1],
+  ['jumprope','Švihadlo','lýtka, ramena, koordinace','Švihadlo','t'],
+  ['boxjump','Výskoky na bednu','stehna, hýždě, výbušnost','Bedna','t',1],
+  ['shadowbox','Stínový box','ramena, core, koordinace','Vlastní váha','t',1],
+  ['battlerope','Vlny s lany','ramena, paže, core','Lana','t'],
+  ['rowerg','Veslařský trenažér','záda, nohy, celé tělo','Stroj','t'],
+  ['bike','Rotoped','stehna, lýtka','Stroj','t'],
+  ['treadmill','Běh na pásu','nohy, srdce a plíce','Stroj','t']]}
 ];
 // Technika: s = kroky provedení, c = časté chyby
 const TECH = {
@@ -625,7 +639,7 @@ const EXTRA = {
          ['revcrunch','Zpětné zkracovačky','spodní část přímého svalu','Vlastní váha','i']]
 };
 // Výběr pro ženy: nové cviky + vhodné stávající
-const WOMEN = new Set(Object.values(EXTRA).flat().map(x=>x[0]).concat(
+const WOMEN = new Set(Object.values(EXTRA).flat().map(x=>x[0]).concat(['jumpjack','highknees','jumpsquat','skater','jumprope','shadowbox','rowerg','bike','treadmill'],
  ['hammer','cablecurl','hip','bridge','lunge','kick','abd','bulg','rdl','legpress','legcurl','latpd','cablerow','facepull','lat','pushdown','plank','sideplank','pallof','incdb']));
 Object.assign(TECH,{
  kneepush:{s:['Klekni si, dlaně dej na zem o něco šířeji než ramena, kolena za tělem.','Překřiž kotníky a srovnej tělo do rovné linie od hlavy po kolena.','Spouštěj hrudník k zemi, lokty míří šikmo dozadu.','Vytlač se zpět nahoru, boky zůstávají v jedné linii s trupem.'],c:['Vystrčená zadnice a ohnutí v kyčlích.','Hlava padající k zemi před hrudníkem.']},
@@ -719,6 +733,20 @@ Object.assign(TECH,{
  woodchop:{s:['Nastav kladku nahoru, postav se k ní bokem a uchop držadlo oběma rukama.','Chodidla na šíři ramen, ruce natažené.','Táhni držadlo šikmo dolů přes tělo k opačnému koleni, rotace jde z trupu a boků.','Pomalu se vrať. Po sérii vyměň strany.'],c:['Tahání jen rukama.','Kulatá záda v dolní pozici.']},
  bicycle:{s:['Lehni si na záda, ruce za hlavou, nohy zvedni a pokrč do 90°.','Zvedni lopatky ze země.','Přitáhni pravé koleno a zároveň k němu stoč levý loket, druhou nohu natáhni.','Střídej strany v plynulém kontrolovaném tempu.'],c:['Tahání hlavy rukama.','Moc rychlé tempo bez rotace trupu.']}
 });
+Object.assign(TECH,{
+ jumpjack:{s:['Postav se rovně, nohy u sebe, ruce podél těla.','Výskokem roznož nohy na šíři ramen a zároveň zvedni ruce bokem nad hlavu.','Dalším výskokem se vrať do výchozí polohy.','Doskakuj měkce na přední část chodidel a udržuj plynulý rytmus.'],c:['Dopady na paty s propnutými koleny.','Ruce jen do poloviny, bez dotažení nad hlavu.']},
+ highknees:{s:['Postav se rovně, ruce pokrč v loktech jako při běhu.','Běž na místě a zvedej kolena co nejvýš, ideálně do výšky boků.','Paže pracují proti nohám jako při sprintu.','Došlapuj na přední část chodidla, trup drž vzpřímený.'],c:['Záklon trupu, aby se koleno dostalo výš.','Dopady na celé chodidlo nebo na paty.']},
+ burpee:{s:['Ze stoje se přikrč a dej dlaně na zem před chodidla.','Výskokem nebo krokem dozadu se dostaň do polohy kliku.','Přitáhni nohy zpět k rukám.','Vyskoč vzhůru s rukama nad hlavou a měkce dopadni. Lehčí varianta je bez výskoku.'],c:['Propadlá bedra v poloze kliku.','Zrychlování na úkor techniky na konci intervalu.']},
+ jumpsquat:{s:['Postav se na šíři ramen, špičky mírně ven.','Dřepni do polohy, kdy jsou stehna zhruba vodorovně, ruce jdou dozadu.','Výbušně vyskoč vzhůru, ruce švihni nahoru.','Dopadni měkce do dřepu a plynule navaž dalším skokem.'],c:['Tvrdý dopad na propnutá kolena.','Kolena padající při dopadu dovnitř.']},
+ skater:{s:['Postav se na jednu nohu v mírném podřepu.','Odraz se do strany na druhou nohu, jako když bruslíš.','Dopadni měkce do podřepu, volnou nohu dej šikmo za sebe.','Paže švihají přes tělo a pomáhají s rovnováhou. Pokračuj na druhou stranu.'],c:['Dopad s propnutým kolenem.','Malý odraz bez práce hýždí.']},
+ jumprope:{s:['Drž rukojeti u boků, lokty u těla.','Toč švihadlem hlavně ze zápěstí, ne z ramen.','Skákej nízko, jen pár centimetrů nad zem, na přední části chodidel.','Začni základním skokem snožmo, později střídej nohy.'],c:['Vysoké skoky a hlučné dopady.','Točení švihadlem celými pažemi.']},
+ boxjump:{s:['Postav se asi na krok od bedny, nohy na šíři boků.','Podřepni a švihni rukama dozadu.','Výbušně vyskoč na bednu a dopadni na celá chodidla do mírného podřepu.','Na bedně se narovnej a sestup dolů krokem, ne skokem.'],c:['Moc vysoká bedna, kvůli které dopadáš do hlubokého dřepu.','Seskakování dozadu, které zatěžuje Achillovky.']},
+ shadowbox:{s:['Postav se do boxerského postoje, jedna noha vpředu, kolena mírně pokrčená.','Ruce drž v gardě u brady, lokty u těla.','Střídej přímé údery a háky, po každém úderu vrať ruku do gardy.','Pohybuj se na špičkách a přenášej váhu z nohou do úderu.'],c:['Spuštěná garda mezi údery.','Propnutý loket na konci úderu.']},
+ battlerope:{s:['Uchop konce lan a postav se do podřepu, záda rovná.','Ruce měj před sebou, lokty mírně pokrčené.','Střídavě nebo současně rychle zvedej a spouštěj ruce, aby po lanech běžely vlny.','Pohyb jde z ramen, trup a nohy zůstávají pevné.'],c:['Narovnání do stoje a ztráta podřepu.','Kulatá záda a předklon.']},
+ rowerg:{s:['Sedni si, zapni nohy do pásků a uchop madlo.','Začni s pokrčenými koleny, rovnými zády a napnutýma rukama.','Odraz se nohama, pak se mírně zakloň a nakonec přitáhni madlo k dolní části hrudníku.','Zpátky jdi v opačném pořadí: ruce, trup a nakonec kolena.'],c:['Tahání rukama dřív, než se propnou nohy.','Kulatá záda na začátku záběru.']},
+ bike:{s:['Nastav sedlo tak, aby noha ve spodní poloze zůstala lehce pokrčená.','Ruce polož na řídítka, záda drž rovná.','Šlapej plynule, tlakem přes přední část chodidla.','Intervaly dělej změnou odporu nebo rychlosti šlapání.'],c:['Moc nízké sedlo, které zatěžuje kolena.','Houpání boky ze strany na stranu.']},
+ treadmill:{s:['Začni chůzí a postupně zrychli do běhu.','Běž vzpřímeně s pohledem dopředu, ruce pokrčené v loktech.','Došlapuj pod tělo, krok drž spíš kratší a rychlejší.','Interval udělej zrychlením nebo sklonem, v pauze přejdi do chůze.'],c:['Držení se madel během běhu.','Dlouhé kroky s dopadem na patu daleko před tělem.']}
+});
 const EX = {};
 PARTS.forEach(p=>{p.ex = p.ex.concat(EXTRA[p.id]||[]).map(([id,n,m,eq,t,bw])=>{const e={id,n,m,eq,t,bw:!!bw,w:WOMEN.has(id),part:p.id,partName:p.name};EX[id]=e;return e;});});
 // Hotové tréninky (k = kategorie pro filtr)
@@ -737,7 +765,9 @@ const TEMPLATES = [
  {id:'home',name:'Doma bez vybavení',k:['doma','zac'],lvl:'Začátečník',where:'Doma',desc:'Celé tělo jen s vlastní vahou, stačí kus místa.',ids:['kliky','cossack','pike','sgbridge','wallsit','mountain','plank']},
  {id:'core',name:'Core a stabilita',k:['doma','zeny'],lvl:'Všechny úrovně',where:'Doma i posilovna',desc:'Břicho a hluboký stabilizační systém. Pomáhá i proti bolesti zad.',ids:['deadbug','birddog','sideplank','hollow','bicycle','revcrunch']},
  {id:'arms',name:'Paže',k:['split'],lvl:'Mírně pokročilý',where:'Posilovna',desc:'Samostatný den na biceps a triceps nebo doplněk k rozpisu.',ids:['cgbp','bbcurl','skull','hammer','pushdown','incurl']},
- {id:'express',name:'Expresní 30 minut',k:['zac'],lvl:'Všechny úrovně',where:'Posilovna',desc:'Celé tělo v pěti cvicích, když nemáš čas.',ids:['goblet','incdb','dbrow','kbswing','plank']}
+ {id:'express',name:'Expresní 30 minut',k:['zac'],lvl:'Všechny úrovně',where:'Posilovna',desc:'Celé tělo v pěti cvicích, když nemáš čas.',ids:['goblet','incdb','dbrow','kbswing','plank']},
+ {id:'hiit',name:'Kardio HIIT doma',k:['doma','zac'],lvl:'Všechny úrovně',where:'Doma',desc:'Krátké intenzivní intervaly bez vybavení. Zabere zhruba 20 minut.',ids:['jumpjack','highknees','jumpsquat','skater','burpee','mountain']},
+ {id:'cardiogym',name:'Kardio na strojích',k:['zac'],lvl:'Všechny úrovně',where:'Posilovna',desc:'Střídání trenažérů pro vytrvalost. Hodí se po silovém tréninku i jako samostatný den.',ids:['rowerg','bike','treadmill','battlerope','jumprope']},
 ].map(t=>({...t,ids:t.ids.filter(id=>id in TECH)}));
 const TPLCATS=[['all','Vše'],['prog','Týdenní programy'],['zac','Začátečníci'],['split','Rozpisy'],['zeny','Pro ženy'],['doma','Doma']];
 // Týdenní programy: tréninky, které se střídají v pořadí
@@ -758,7 +788,7 @@ function eqGroup(e){const q=e.eq;
   if(/činka|T-osa|Landmine|Kotouč/.test(q)) return 'bb';
   return 'bw';}
 const WPART = {id:'zeny',name:'Pro ženy',lat:'hýždě, nohy, core a šetrnější varianty',ex:Object.values(EX).filter(e=>e.w)};
-Object.values(EX).forEach(e=>{e._s=norm([e.n,e.m,e.partName,e.eq].join(' '));e.g=eqGroup(e);});
+Object.values(EX).forEach(e=>{if(e.part==='kardio')e.cardio=true;e._s=norm([e.n,e.m,e.partName,e.eq,e.cardio?'kardio':''].join(' '));e.g=eqGroup(e);});
 
 // ---------- obrázky cviků: postava v SVG ----------
 // Boční pohled (m:'s', postava hledí doprava) nebo čelní pohled (m:'f').
@@ -801,8 +831,8 @@ function solveFront(p){
   return {c,top,head,shc,shL,shR,hL,hR,eL,aL,eR,aR,kL,fL,kR,fR,toeL,toeR,t};
 }
 // Zvýraznění zapojených svalů podle partie
-const HL_PART={hrudnik:['chest'],zada:['back'],ramena:['delt'],biceps:['ua'],triceps:['ua'],nohy:['th'],hyzde:['glute','th'],bricho:['abs']};
-const HL_EX={calf:['calf'],seatcalf:['calf'],dl:['back','glute','th'],rdl:['glute','th'],sldl:['glute','th'],hyper:['back','glute'],shrug:['back'],
+const HL_PART={kardio:['th','calf'],hrudnik:['chest'],zada:['back'],ramena:['delt'],biceps:['ua'],triceps:['ua'],nohy:['th'],hyzde:['glute','th'],bricho:['abs']};
+const HL_EX={jumpjack:['delt','calf'],burpee:['chest','th'],jumprope:['calf'],shadowbox:['delt','abs'],battlerope:['delt','abs'],rowerg:['back','th'],boxjump:['th','glute'],jumpsquat:['th','glute'],skater:['glute','th'],highknees:['th','abs'],calf:['calf'],seatcalf:['calf'],dl:['back','glute','th'],rdl:['glute','th'],sldl:['glute','th'],hyper:['back','glute'],shrug:['back'],
   cgbp:['ua','chest'],dips:['chest','ua'],benchdip:['ua'],diamond:['ua','chest'],pike:['delt','ua'],uprow:['delt'],landmine:['delt','chest'],
   legcurl:['th'],nordic:['th'],plank:['abs'],sideplank:['abs'],mountain:['abs'],birddog:['abs','glute'],kbswing:['glute','th'],pullthru:['glute'],
   revcurl:['ua','fa'],hammer:['ua','fa'],zottman:['ua','fa'],abd:['glute'],hydrant:['glute'],clam:['glute'],bandwalk:['glute']};
@@ -879,6 +909,7 @@ function prims(def,p,hl){
     if(q.k==='wheel'){C('g-plo',[at[0],at[1]+2],6.5);C('g-hub',[at[0],at[1]+2],1.9);}
     if(q.k==='handle')L('g-eqb',[at[0],at[1]-5],[at[0],at[1]+5],3);
     if(q.k==='roll')C('g-roll',at,4.6);
+    if(q.k==='rope'){const a=j.a,ph=p.rp??0,an=lerp(100,-110,ph),R=46,m1=P(a,R*.62,an+28),ap=P(a,R,an);L('g-band',a,m1,2.2);L('g-band',m1,ap,2.2);L('g-band',ap,P(ap,10,an+100),2.2);}
     if(q.k==='plat'){const d=q.ang||-45;L('g-pad',P(at,10,d),P(at,10,d+180),5);}
   });
   return out;
@@ -1049,6 +1080,19 @@ add('mountain',{m:'s',A:X({},plank(50,25.7),{a:[118.4,G]}),B:{f:[96,116],kb:-1}}
 add('hollow',{m:'s',still:true,A:{h:[100,120],t:-172,a:[36,108],f:[143,112],f2:[141,114]}});
 add('woodchop',{m:'f',A:FR({aL:[66,30],aR:[74,32]}),B:{aL:[122,96],aR:[130,94]},p:[{k:'cable',at:'aL',to:[40,10]}]});
 add('bicycle',{m:'s',A:{h:[104,118],t:-165,a:[66,104],f:[106,92],f2:[148,108]},B:{f:[148,108],f2:[106,92]}});
+// ---------- KARDIO ----------
+add('jumpjack',{m:'f',A:FR({c:[100,80],fL:[96,G],fR:[104,G]}),B:{aL:[80,16],aR:[120,16],fL:[80,G],fR:[120,G],c:[100,78]}});
+add('highknees',{m:'s',A:ST(100,{f:[112,98],f2:[100,G],a:[88,76],a2:[114,62],eb:1,eb2:-1,kb:-1}),B:{f:[100,G],f2:[112,98],a:[114,62],a2:[88,76],eb:-1,eb2:1}});
+add('burpee',{m:'s',A:ST(100,{a:[106,16],f:[100,G],f2:[97,G]}),B:X({},plank(50,25.7),{a:[118.4,G]})});
+add('jumpsquat',{m:'s',A:{h:[84,104],t:-62,a:[80,96],f:[102,G],f2:[99,G]},B:{h:[100,70],t:-90,a:[110,24],f:[101,112],f2:[98,112],fa:40}});
+add('skater',{m:'f',A:{c:[84,96],aL:[64,80],aR:[100,90],fL:[78,G],fR:[96,118],kbR:-1,faR:200},B:{c:[116,96],aL:[100,90],aR:[136,80],fL:[104,118],fR:[122,G],kbL:1,kbR:-1,faL:-20}});
+add('jumprope',{m:'s',A:ST(100,{a:[108,80],f:[101,G],f2:[98,G],rp:0}),B:{h:[100,74],a:[108,72],f:[101,118],f2:[98,118],fa:45,rp:1},p:[{k:'rope'}]});
+add('boxjump',{m:'s',A:{h:[78,104],t:-58,a:[70,98],f:[96,G],f2:[93,G]},B:{h:[130,62],t:-84,a:[142,64],f:[134,95],f2:[131,95]},p:[{k:'box',x:116,y:96,w:40}]});
+add('shadowbox',{m:'s',A:ST(100,{h:[98,84],a:[112,46],a2:[110,52],f:[116,G],f2:[86,G],eb:1}),B:{a:[142,44]}});
+add('battlerope',{m:'s',A:{h:[90,92],t:-72,a:[124,58],f:[106,G],f2:[84,G]},B:{a:[126,92]},p:[{k:'band',at:'a',to:[188,G-3]}]});
+add('rowerg',{m:'s',A:{h:[114,110],t:-62,a:[146,98],f:[138,108],f2:[136,108],kb:-1,fa:-70},B:{h:[94,110],t:-112,a:[106,88]},p:[{k:'line',x1:62,y1:118,x2:150,y2:118,w:4,c:'g-eqb'},{k:'line',x1:140,y1:100,x2:140,y2:118,w:4,c:'g-eqb'},{k:'cable',at:'a',to:[164,100]},{k:'handle',at:'a'}]});
+add('bike',{m:'s',A:{h:[88,82],t:-62,a:[124,64],f:[108,98],f2:[104,122],fa:0,fa2:0},B:{f:[104,122],f2:[108,98]},p:[{k:'line',x1:86,y1:86,x2:104,y2:110,w:4,c:'g-eqb'},{k:'line',x1:80,y1:84,x2:94,y2:84,w:5,c:'g-pad'},{k:'line',x1:124,y1:66,x2:116,y2:112,w:4,c:'g-eqb'},{k:'line',x1:118,y1:66,x2:130,y2:66,w:4,c:'g-eqb'},{k:'line',x1:84,y1:G,x2:134,y2:G,w:5,c:'g-eqb'},{k:'roll',at:[106,110]},{k:'line',x1:104,y1:110,x2:110,y2:G,w:3,c:'g-eq'}]});
+add('treadmill',{m:'s',A:ST(96,{t:-84,a:[84,80],a2:[110,62],f:[118,G-4],f2:[78,G-10],eb:1,eb2:-1,kb:-1,kb2:1}),B:{a:[110,62],a2:[84,80],f:[80,G-10],f2:[118,G-4],kb:1,kb2:-1},p:[{k:'line',x1:56,y1:G-1,x2:146,y2:G-1,w:6,c:'g-pad'},{k:'line',x1:144,y1:G-3,x2:136,y2:58,w:4,c:'g-eqb'},{k:'line',x1:136,y1:60,x2:122,y2:64,w:4,c:'g-eqb'}]});
 return F;
 })();
 
@@ -1090,7 +1134,7 @@ function switchTo(id){dropSess();save();S.active=id;load();S.confirmDel=false;sa
 const $ = s=>document.querySelector(s);
 const plural=(n,a,b,c)=>n===1?a:(n>=2&&n<=4?b:c);
 const fmtRest=s=>s>=120&&s%60===0?`${s/60} min`:s>=120?`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')} min`:`${s} s`;
-const kind=e=>e.t==='t'?'t':e.t;
+const kind=e=>e.cardio?'k':e.t;
 function rx(e,x=0){
   const b=GOALS[S.goal][kind(e)];
   return {sets:Math.max(1,Math.min(8,b.sets+x)),reps:b.reps,rest:b.rest,base:b.sets};
@@ -1157,7 +1201,8 @@ function suggest(e,r){
   const last=lastFor(e.id); if(!last) return null;
   const [lo,hi]=range(r), sets=last.sets;
   if(e.t==='t'){const best=Math.max(...sets.map(s=>s.reps));
-    return best>=hi?{kg:0,reps:best+10,txt:`Minule jsi zvládl ${best} s. Prodluž výdrž na ${best+10} s.`,up:true}:{kg:0,reps:Math.min(hi,best+5),txt:`Zkus výdrž o 5 s delší: ${Math.min(hi,best+5)} s.`};}
+    const w=e.cardio?'interval':'výdrž';
+    return best>=hi?{kg:0,reps:best+10,txt:`Minule jsi zvládl ${best} s. Prodluž ${w} na ${best+10} s.`,up:true}:{kg:0,reps:Math.min(hi,best+5),txt:`Zkus ${w} o 5 s delší: ${Math.min(hi,best+5)} s.`};}
   const top=Math.max(...sets.map(s=>s.kg||0)), atTop=sets.filter(s=>(s.kg||0)===top);
   const allHi=atTop.length>=Math.min(r.sets,sets.length)&&atTop.every(s=>s.reps>=hi);
   const low=atTop.filter(s=>s.reps<lo).length, bestReps=Math.max(...atTop.map(s=>s.reps));
@@ -1226,7 +1271,7 @@ function vZeny(){
 }
 function exRow(e,o={}){const on=inPlan(e.id),r=rx(e);
   return `<div class="ex ${on?'on':''}"><button class="exthumb" data-info="${e.id}" tabindex="-1" aria-hidden="true">${figSVG(e.id)}</button><button class="exinfo" data-info="${e.id}" aria-label="Jak cvičit: ${e.n}"><span class="nm">${e.n}</span><span class="mt">${o.part?e.partName+' · ':''}${e.m}</span>
-    <span class="tags"><span class="tag ${e.t==='c'?'c':''}">${e.t==='c'?'Komplexní':e.t==='t'?'Výdrž':'Izolovaný'}</span><span class="tag">${e.eq}</span>${e.w&&o.women?'<span class="tag w">Pro ženy</span>':''}<span class="dose">${r.sets} × ${r.reps}</span></span>
+    <span class="tags"><span class="tag ${e.t==='c'?'c':''}">${e.cardio?'Kardio':e.t==='c'?'Komplexní':e.t==='t'?'Výdrž':'Izolovaný'}</span><span class="tag">${e.eq}</span>${e.w&&o.women?'<span class="tag w">Pro ženy</span>':''}<span class="dose">${r.sets} × ${r.reps}</span></span>
     <span class="how" style="margin-top:6px">${I.info} Jak cvičit</span></button>
     <button class="add" data-toggle="${e.id}" aria-pressed="${on}" aria-label="${on?'Odebrat z tréninku':'Přidat do tréninku'}: ${e.n}">${on?I.check:I.plus}</button></div>`;}
 function searchResults(){
@@ -1248,7 +1293,7 @@ function vHledat(){
 function vCviky(){
   const W=S.wmode, p=PARTS.find(x=>x.id===S.part);
   const list=p.ex.filter(e=>!W||e.w).filter(e=>S.filter==='all'||(S.filter==='w'?e.w:S.filter==='c'?e.t==='c':e.t!=='c'));
-  const f=[['all','Vše'],['c','Komplexní'],['i','Izolované']].concat(W?[]:[['w','Pro ženy']]);
+  const f=(p.id==='kardio'?[['all','Vše']]:[['all','Vše'],['c','Komplexní'],['i','Izolované']]).concat(W?[]:[['w','Pro ženy']]);
   return `<div class="view">
    <button class="back" data-act="back">${I.back} ${W?'Pro ženy':'Partie'}</button>
    <div class="ptitle"><h2>${p.name}</h2><em>${W?'Pro ženy · ':''}${p.lat} · dávkování pro cíl ${GOALS[S.goal].label.toLowerCase()}</em></div>
@@ -1321,7 +1366,7 @@ function vCvicit(){
      <div class="figbox">${figSVG(e.id,{anim:true,label:'Ukázka pohybu: '+e.n})}</div>
      <div class="nowact"><button class="how" data-info="${e.id}">${I.info} Jak cvik provést</button><button class="how" data-act="swapopen" aria-expanded="${S.swapOpen===e.id}">${I.swap} Vyměnit cvik</button></div>
      ${S.swapOpen===e.id?swapBox(e):''}
-     <div class="big"><div><b>${r.sets}</b><span>${plural(r.sets,'série','série','sérií')}</span></div><div><b>${r.reps}</b><span>${e.t==='t'?'výdrž':'opakování'}${S.goal==='sila'&&e.bw&&e.t!=='t'?' se zátěží':''}</span></div><div><b>${fmtRest(r.rest)}</b><span>pauza</span></div></div>
+     <div class="big"><div><b>${r.sets}</b><span>${plural(r.sets,'série','série','sérií')}</span></div><div><b>${r.reps}</b><span>${e.cardio?'interval':e.t==='t'?'výdrž':'opakování'}${S.goal==='sila'&&e.bw&&e.t!=='t'?' se zátěží':''}</span></div><div><b>${fmtRest(r.rest)}</b><span>pauza</span></div></div>
      <div class="lastline">${last?`<span>Minule ${fmtDate(last.date)}:</span> ${last.sets.map(s=>fmtSet(e,s)).join(' · ')}`:'Zatím bez záznamu. Zapiš si váhu a opakování u každé série.'}</div>
      ${sg?`<div class="hint ${sg.up?'up':sg.down?'down':''}">${sg.up?I.up:''}${sg.txt}</div>`:''}
      <div class="logtbl">
@@ -1470,7 +1515,7 @@ function chartHtml(id){
     if(v>0) pts.push({d:l.date,v});});
   if(pts.length<2) return pts.length?`<div><h4>Graf pokroku</h4><p class="note">Graf se ukáže po druhém odcvičeném tréninku s tímto cvikem.</p></div>`:'';
   const P=pts.slice(-12), unit=anyKg?'kg':e.t==='t'?'s':'opak.';
-  const label=anyKg?'Odhad maxima na 1 opakování':e.t==='t'?'Nejdelší výdrž':'Nejvíc opakování v sérii';
+  const label=anyKg?'Odhad maxima na 1 opakování':e.cardio?'Nejdelší interval':e.t==='t'?'Nejdelší výdrž':'Nejvíc opakování v sérii';
   const W=320,H=150,L=38,R=12,T=14,B=24, vals=P.map(p=>p.v);
   let lo=Math.min(...vals),hi=Math.max(...vals); if(hi-lo<1){lo-=1;hi+=1;}
   const step=[0.5,1,2,2.5,5,10,20,25,50].find(s=>(hi-lo)/s<=3)||100;
@@ -1676,7 +1721,7 @@ $('#main').addEventListener('click',ev=>{
     if(k>cur) return;
     const kgI=document.getElementById(`kg-${p.id}-${k}`), rpI=document.getElementById(`rp-${p.id}-${k}`);
     const reps=num(rpI&&rpI.value), kg=e.t==='t'?0:(num(kgI&&kgI.value)??0);
-    if(!(reps>0)){toast(e.t==='t'?'Zadej délku výdrže v sekundách':'Zadej počet opakování');if(rpI)rpI.focus();return;}
+    if(!(reps>0)){toast(e.t==='t'?(e.cardio?'Zadej délku intervalu v sekundách':'Zadej délku výdrže v sekundách'):'Zadej počet opakování');if(rpI)rpI.focus();return;}
     if(kg<0){toast('Váha nemůže být záporná');return;}
     (ss.log[p.id]=ss.log[p.id]||[])[k]={kg,reps};
     if(ss.draft[p.id]) delete ss.draft[p.id][k];
